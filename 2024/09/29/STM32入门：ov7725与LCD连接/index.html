@@ -1,0 +1,858 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="three27seven">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="实验目的：将摄像头所示图像显示到LCD屏幕上去。  摄像头拍到的图像,是由一个个色块组成的，而这些色块代表着信息（它们的位置和颜色）  而将摄像头所示图像显示到LCD屏幕需要以下两步:   从摄像头读取出色块信息 将色块信息转移到LCD屏幕上   首先我们需要知道色块信息储存在哪里？  正点原子的OV7725自带一个FIFO芯片，储存着色块信息  综上，摄像头与LCD的连接步骤如下：  摄像头捕">
+<meta property="og:type" content="article">
+<meta property="og:title" content="STM32入门：ov7725与LCD连接">
+<meta property="og:url" content="http://three27seven.top/2024/09/29/STM32%E5%85%A5%E9%97%A8%EF%BC%9Aov7725%E4%B8%8ELCD%E8%BF%9E%E6%8E%A5/index.html">
+<meta property="og:site_name" content="three27seven">
+<meta property="og:description" content="实验目的：将摄像头所示图像显示到LCD屏幕上去。  摄像头拍到的图像,是由一个个色块组成的，而这些色块代表着信息（它们的位置和颜色）  而将摄像头所示图像显示到LCD屏幕需要以下两步:   从摄像头读取出色块信息 将色块信息转移到LCD屏幕上   首先我们需要知道色块信息储存在哪里？  正点原子的OV7725自带一个FIFO芯片，储存着色块信息  综上，摄像头与LCD的连接步骤如下：  摄像头捕">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://three27seven.top/app1/Typora/ov7725.assets/image-20240925184419568.png">
+<meta property="og:image" content="http://three27seven.top/app1/Typora/ov7725.assets/image-20240925170130695.png">
+<meta property="og:image" content="http://three27seven.top/app1/Typora/ov7725.assets/image-20240925194904081.png">
+<meta property="og:image" content="http://three27seven.top/app1/Typora/ov7725.assets/image-20240925191845068.png">
+<meta property="og:image" content="http://three27seven.top/app1/Typora/ov7725.assets/image-20240925191839771.png">
+<meta property="og:image" content="http://three27seven.top/app1/Typora/ov7725.assets/image-20240925194649651.png">
+<meta property="og:image" content="http://three27seven.top/app1/Typora/ov7725.assets/image-20240925194702715.png">
+<meta property="og:image" content="http://three27seven.top/app1/Typora/ov7725.assets/image-20240925195333115.png">
+<meta property="og:image" content="http://three27seven.top/app1/Typora/ov7725.assets/image-20240925200927305.png">
+<meta property="og:image" content="http://three27seven.top/app1/Typora/ov7725.assets/image-20240927185026774.png">
+<meta property="og:image" content="http://three27seven.top/app1/Typora/ov7725.assets/image-20240927190106926.png">
+<meta property="og:image" content="http://three27seven.top/app1/Typora/ov7725.assets/image-20240927190218364.png">
+<meta property="article:published_time" content="2024-09-29T07:18:37.000Z">
+<meta property="article:modified_time" content="2024-09-29T07:19:34.187Z">
+<meta property="article:author" content="three27seven">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://three27seven.top/app1/Typora/ov7725.assets/image-20240925184419568.png">
+  
+  
+  
+  <title>STM32入门：ov7725与LCD连接 - three27seven</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"three27seven.top","root":"/","version":"1.9.7","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":"ZYhHOpolBbpgNp7H1rQBR7vX-gzGzoHsz","app_key":"2wY8uFGJJVNXtFuViJUJZ5NJ","server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+    <!-- Google tag (gtag.js) -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        Fluid.utils.createScript("https://www.googletagmanager.com/gtag/js?id=", function() {
+          window.dataLayer = window.dataLayer || [];
+          function gtag() {
+            dataLayer.push(arguments);
+          }
+          gtag('js', new Date());
+          gtag('config', '');
+        });
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+  
+<meta name="generator" content="Hexo 7.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>three27seven</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="STM32入门：ov7725与LCD连接"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-09-29 15:18" pubdate>
+          2024年9月29日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.7k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          15 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="leancloud-page-views"></span>次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">STM32入门：ov7725与LCD连接</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <ul>
+<li>实验目的：将摄像头所示图像显示到LCD屏幕上去。</li>
+</ul>
+<p>摄像头拍到的图像,是由一个个色块组成的，而这些色块代表着信息（它们的位置和颜色）</p>
+<ul>
+<li>而将摄像头所示图像显示到LCD屏幕需要以下两步:</li>
+</ul>
+<ol>
+<li>从摄像头读取出色块信息</li>
+<li>将色块信息转移到LCD屏幕上</li>
+</ol>
+<ul>
+<li>首先我们需要知道色块信息储存在哪里？</li>
+</ul>
+<p>正点原子的OV7725自带一个FIFO芯片，储存着色块信息</p>
+<ul>
+<li>综上，摄像头与LCD的连接步骤如下：</li>
+</ul>
+<p><strong>摄像头捕捉图像——产生色块信息——将色块信息储存在FIFO中——LCD再读取</strong></p>
+<p>我们将逐步讲解</p>
+<p>ps.本实验用具，正点原子STM32F103ZET6精英开发板，ov7725模块</p>
+<p>资料下载如下<a target="_blank" rel="noopener" href="https://pan.baidu.com/s/1K07LjkJEmlxcnv_r215tXg?_at_=1727252850614#list/path=%2Fsharelink1102113311042-282735585891847%2F%E3%80%90%E6%AD%A3%E7%82%B9%E5%8E%9F%E5%AD%90%E3%80%91OV7725%E6%A8%A1%E5%9D%97%E3%80%90%E5%B8%A6FIFO%E3%80%91%2F%E3%80%90%E6%AD%A3%E7%82%B9%E5%8E%9F%E5%AD%90%E3%80%91ATK-OV7725%E6%91%84%E5%83%8F%E5%A4%B4%E6%A8%A1%E5%9D%97%E8%B5%84%E6%96%99%2F%E3%80%90%E6%AD%A3%E7%82%B9%E5%8E%9F%E5%AD%90%E3%80%91ATK-OV7725%E6%91%84%E5%83%8F%E5%A4%B4%E6%A8%A1%E5%9D%97%E8%B5%84%E6%96%99%EF%BC%88%E6%96%B0%E8%B5%84%E6%96%99%EF%BC%89&parentPath=%2Fsharelink1102113311042-282735585891847%3Flogin_type">【正点原子】OV7725模块【带FIFO】_免费高速下载|百度网盘-分享无限制 (baidu.com)</a></p>
+<h2 id="一、摄像头捕捉图像"><a href="#一、摄像头捕捉图像" class="headerlink" title="一、摄像头捕捉图像"></a>一、摄像头捕捉图像</h2><p>摄像头能捕捉头像的前提是，摄像头启动</p>
+<h3 id="1、摄像头启动"><a href="#1、摄像头启动" class="headerlink" title="1、摄像头启动"></a>1、摄像头启动</h3><p>摄像头启动分为三个方面</p>
+<ul>
+<li>硬件启动（通过GPIO口）</li>
+<li>通讯方式启动(通讯方式名为SCCB)（通讯方式可以类比于写字用的笔，通讯方式的不同则写字用的笔也不同）</li>
+<li>软件启动(我们也称软件复位)</li>
+</ul>
+<h4 id="（1）硬件启动"><a href="#（1）硬件启动" class="headerlink" title="（1）硬件启动"></a>（1）硬件启动</h4><p>即GPIO口启动，我们来看看OV7725有哪些GPIO口</p>
+<p><img src="/.top//../../../app1/Typora/ov7725.assets/image-20240925184419568.png" srcset="/img/loading.gif" lazyload alt="image-20240925184419568"></p>
+<p><img src="/.top//../../../app1/Typora/ov7725.assets/image-20240925170130695.png" srcset="/img/loading.gif" lazyload alt="image-20240925170130695"></p>
+<p>通过cube_mx将这些初始化就行了</p>
+<p>值得注意的是，基本都是上拉</p>
+<h4 id="（2）通讯方式启动"><a href="#（2）通讯方式启动" class="headerlink" title="（2）通讯方式启动"></a>（2）通讯方式启动</h4><p>该摄像头使用的是SCCB通讯方式</p>
+<p>关于SCCB的理论，有篇博客讲了，博客地址如下<a target="_blank" rel="noopener" href="https://www.cnblogs.com/aslmer/p/5965229.html">OV7725学习之SCCB协议（一） - aslmer - 博客园 (cnblogs.com)</a></p>
+<p>而我们这里讲述如何将理论转为代码，建议一边对着时序图一边看代码，基础时序图知识如下<a target="_blank" rel="noopener" href="https://blog.csdn.net/tilblackout/article/details/131447687#:~:text=%E6%96%87%E7%AB%A0%E4%BB%8B%E7%BB%8D%E4%BA%86%E6%97%B6%E5%BA%8F%E5%9B%BE%E7%9A%84%E5%9F%BA">时序图基础知识_运算器时序图-CSDN博客</a></p>
+<p>通讯方式启动方式如下</p>
+<ul>
+<li>开始信号</li>
+<li>发送数据</li>
+<li>结束信号</li>
+</ul>
+<h5 id="①init"><a href="#①init" class="headerlink" title="①init"></a>①init</h5><p>SCCB也有GPIO需要初始化，就是SCL,SDA</p>
+<p><img src="/.top//../../../app1/Typora/ov7725.assets/image-20240925194904081.png" srcset="/img/loading.gif" lazyload alt="image-20240925194904081"></p>
+<h5 id="①开始信号结束信号"><a href="#①开始信号结束信号" class="headerlink" title="①开始信号结束信号"></a>①开始信号结束信号</h5><p><img src="/.top//../../../app1/Typora/ov7725.assets/image-20240925191845068.png" srcset="/img/loading.gif" lazyload alt="image-20240925191845068"></p>
+<p>其中开始与结束的分割如下</p>
+<p>STA:start</p>
+<p>STO:stop</p>
+<p><img src="/.top//../../../app1/Typora/ov7725.assets/image-20240925191839771.png" srcset="/img/loading.gif" lazyload alt="image-20240925191839771"></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">atk_mc7725f_sccb_start</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    ATK_MC7725F_SCCB_SDA(<span class="hljs-number">1</span>);<br>    ATK_MC7725F_SCCB_SCL(<span class="hljs-number">1</span>);<br>    atk_mc7725f_sccb_delay();<br>    ATK_MC7725F_SCCB_SDA(<span class="hljs-number">0</span>);<br>    atk_mc7725f_sccb_delay();<br>    ATK_MC7725F_SCCB_SCL(<span class="hljs-number">0</span>);<br>&#125;<br><br><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * @brief       SCCB接口停止信号</span><br><span class="hljs-comment"> * @param       无</span><br><span class="hljs-comment"> * @retval      无</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">atk_mc7725f_sccb_stop</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    ATK_MC7725F_SCCB_SDA(<span class="hljs-number">0</span>);<br>    atk_mc7725f_sccb_delay();<br>    ATK_MC7725F_SCCB_SCL(<span class="hljs-number">1</span>);<br>    atk_mc7725f_sccb_delay();<br>    ATK_MC7725F_SCCB_SDA(<span class="hljs-number">1</span>);<br>    atk_mc7725f_sccb_delay();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h5 id="③发送字节"><a href="#③发送字节" class="headerlink" title="③发送字节"></a>③发送字节</h5><p>数据转化为01二进制由SDA发出</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">atk_mc7725f_sccb_write_byte</span><span class="hljs-params">(<span class="hljs-type">uint8_t</span> dat)</span><br>&#123;<br>    <span class="hljs-type">int8_t</span> dat_index;<br>    <span class="hljs-type">uint8_t</span> dat_bit;<br>    <br>    <span class="hljs-keyword">for</span> (dat_index=<span class="hljs-number">7</span>; dat_index&gt;=<span class="hljs-number">0</span>; dat_index--)<br>    &#123;<br>        dat_bit = (dat &gt;&gt; dat_index) &amp; <span class="hljs-number">0x01</span>;<br>        ATK_MC7725F_SCCB_SDA(dat_bit);<br>        atk_mc7725f_sccb_delay();<br>        ATK_MC7725F_SCCB_SCL(<span class="hljs-number">1</span>);<br>        atk_mc7725f_sccb_delay();<br>        ATK_MC7725F_SCCB_SCL(<span class="hljs-number">0</span>);<br>    &#125;<br>    <br>    ATK_MC7725F_SCCB_SDA(<span class="hljs-number">1</span>);<br>    atk_mc7725f_sccb_delay();<br>    ATK_MC7725F_SCCB_SCL(<span class="hljs-number">1</span>);<br>    atk_mc7725f_sccb_delay();<br>    ATK_MC7725F_SCCB_SCL(<span class="hljs-number">0</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>数据转换重要的是</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">dat_bit = (dat &gt;&gt; dat_index) &amp; <span class="hljs-number">0x01</span>;<br></code></pre></td></tr></table></figure>
+
+<p>可以自行用数据试一下为什么如此</p>
+<h5 id="④接收字节"><a href="#④接收字节" class="headerlink" title="④接收字节"></a>④接收字节</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">for</span> (dat_index=<span class="hljs-number">7</span>; dat_index&gt;=<span class="hljs-number">0</span>; dat_index--)<br> &#123;<br>     atk_mc7725f_sccb_delay();<br>     ATK_MC7725F_SCCB_SCL(<span class="hljs-number">1</span>);<br>     dat_bit = ATK_MC7725F_SCCB_READ_SDA();<br>     *dat |= (dat_bit &lt;&lt; dat_index);<br>     atk_mc7725f_sccb_delay();<br>     ATK_MC7725F_SCCB_SCL(<span class="hljs-number">0</span>);<br> &#125;<br> <br> atk_mc7725f_sccb_delay();<br> ATK_MC7725F_SCCB_SCL(<span class="hljs-number">1</span>);<br> atk_mc7725f_sccb_delay();<br> ATK_MC7725F_SCCB_SCL(<span class="hljs-number">0</span>);<br> atk_mc7725f_sccb_delay();<br> ATK_MC7725F_SCCB_SDA(<span class="hljs-number">0</span>);<br> atk_mc7725f_sccb_delay();<br></code></pre></td></tr></table></figure>
+
+<h5 id="⑤发送数据"><a href="#⑤发送数据" class="headerlink" title="⑤发送数据"></a>⑤发送数据</h5><p>字节构成数据，而数据又按照一定的方式发出</p>
+<p>这边建议再看一遍理论博客，对此进行对照，<a target="_blank" rel="noopener" href="https://www.cnblogs.com/aslmer/p/5965229.html">OV7725学习之SCCB协议（一） - aslmer - 博客园 (cnblogs.com)</a>或者看时序图</p>
+<p><img src="/.top//../../../app1/Typora/ov7725.assets/image-20240925194649651.png" srcset="/img/loading.gif" lazyload alt="image-20240925194649651"></p>
+<p><img src="/.top//../../../app1/Typora/ov7725.assets/image-20240925194702715.png" srcset="/img/loading.gif" lazyload alt="image-20240925194702715"></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * @brief       SCCB接口3阶段写传输</span><br><span class="hljs-comment"> * @param       id_addr : ID Address</span><br><span class="hljs-comment"> *              sub_addr: Sub-address</span><br><span class="hljs-comment"> *              dat     : Write Data</span><br><span class="hljs-comment"> * @retval      无</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">atk_mc7725f_sccb_3_phase_write</span><span class="hljs-params">(<span class="hljs-type">uint8_t</span> id_addr, <span class="hljs-type">uint8_t</span> sub_addr, <span class="hljs-type">uint8_t</span> dat)</span><br>&#123;<br>    atk_mc7725f_sccb_start();<br>    atk_mc7725f_sccb_write_byte((id_addr &lt;&lt; <span class="hljs-number">1</span>) | ATK_MC7725F_SCCB_WRITE);<br>    atk_mc7725f_sccb_write_byte(sub_addr);<br>    atk_mc7725f_sccb_write_byte(dat);<br>    atk_mc7725f_sccb_stop();<br>&#125;<br><br><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * @brief       SCCB接口2阶段写传输</span><br><span class="hljs-comment"> * @param       id_addr : ID Address</span><br><span class="hljs-comment"> *              sub_addr: Sub-address</span><br><span class="hljs-comment"> * @retval      无</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">atk_mc7725f_sccb_2_phase_write</span><span class="hljs-params">(<span class="hljs-type">uint8_t</span> id_addr, <span class="hljs-type">uint8_t</span> sub_addr)</span><br>&#123;<br>    atk_mc7725f_sccb_start();<br>    atk_mc7725f_sccb_write_byte((id_addr &lt;&lt; <span class="hljs-number">1</span>) | ATK_MC7725F_SCCB_WRITE);<br>    atk_mc7725f_sccb_write_byte(sub_addr);<br>    atk_mc7725f_sccb_stop();<br>&#125;<br><br><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * @brief       SCCB接口2阶段读传输</span><br><span class="hljs-comment"> * @param       id_addr: ID Address</span><br><span class="hljs-comment"> *              dat: 读取到的数据</span><br><span class="hljs-comment"> * @retval      无</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">atk_mc7725f_sccb_2_phase_read</span><span class="hljs-params">(<span class="hljs-type">uint8_t</span> id_addr, <span class="hljs-type">uint8_t</span> *dat)</span><br>&#123;<br>    atk_mc7725f_sccb_start();<br>    atk_mc7725f_sccb_write_byte((id_addr &lt;&lt; <span class="hljs-number">1</span>) | ATK_MC7725F_SCCB_READ);<br>    atk_mc7725f_sccb_read_byte(dat);<br>    atk_mc7725f_sccb_stop();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="（3）软件启动-软件复位"><a href="#（3）软件启动-软件复位" class="headerlink" title="（3）软件启动(软件复位)"></a>（3）软件启动(软件复位)</h4><p>复位，就是将曾经写入外设的乱七八糟的所有东西清除，变得干干净净，</p>
+<p>我们将复位比作按钮，按下这个按钮就复位成功</p>
+<p>按钮是地址，按下这个动作是向地址写入相应的命令（该图来源资料——参考资料——datasheet）</p>
+<img src="/.top//../../../app1/Typora/ov7725.assets/image-20240925195333115.png" srcset="/img/loading.gif" lazyload alt="image-20240925195333115" style="zoom:67%;">
+
+<p>如上地址是0x12，我们将它命名为</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> ATK_MC7725F_REG_COM7        0x12</span><br></code></pre></td></tr></table></figure>
+
+<p>我们对它写入的命令，二进制为1000 0000转为十六进制则是0x80</p>
+<p>程序如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">atk_mc7725f_sw_reset</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    atk_mc7725f_write_reg(ATK_MC7725F_REG_COM7, <span class="hljs-number">0x80</span>);<br>    delay_ms(<span class="hljs-number">2</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>而write_reg是SCCB通讯里发送数据的集合</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">//SCCB写入方式，三个阶段，主机向从机（摄像头）写入摄像头ID（地址），需要写的摄像头的寄存器的地址，写入的数据</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">atk_mc7725f_write_reg</span><span class="hljs-params">(<span class="hljs-type">uint8_t</span> reg, <span class="hljs-type">uint8_t</span> dat)</span><br>&#123;<br>    atk_mc7725f_sccb_3_phase_write(ATK_MC7725F_SCCB_ADDR, reg, dat);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<h2 id="二、产生色块信息"><a href="#二、产生色块信息" class="headerlink" title="二、产生色块信息"></a>二、产生色块信息</h2><p>首先我们需要知道色块信息有哪些</p>
+<h3 id="（1）色块信息"><a href="#（1）色块信息" class="headerlink" title="（1）色块信息"></a>（1）色块信息</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">uint8_t</span> <span class="hljs-title function_">atk_mc7725f_set_light_mode</span><span class="hljs-params">(<span class="hljs-type">atk_mc7725f_light_mode_t</span> mode)</span>;                                  <span class="hljs-comment">/* 设置ATK-MC7725F模块灯光模式 */</span><br><span class="hljs-type">uint8_t</span> <span class="hljs-title function_">atk_mc7725f_set_color_saturation</span><span class="hljs-params">(<span class="hljs-type">atk_mc7725f_color_saturation_t</span> saturation)</span>;                <span class="hljs-comment">/* 设置ATK-MC7725F模块色彩饱和度 */</span><br><span class="hljs-type">uint8_t</span> <span class="hljs-title function_">atk_mc7725f_set_brightness</span><span class="hljs-params">(<span class="hljs-type">atk_mc7725f_brightness_t</span> brightness)</span>;                            <span class="hljs-comment">/* 设置ATK-MC7725F模块亮度 */</span><br><span class="hljs-type">uint8_t</span> <span class="hljs-title function_">atk_mc7725f_set_contrast</span><span class="hljs-params">(<span class="hljs-type">atk_mc7725f_contrast_t</span> contrast)</span>;                                  <span class="hljs-comment">/* 设置ATK-MC7725F模块对比度 */</span><br><span class="hljs-type">uint8_t</span> <span class="hljs-title function_">atk_mc7725f_set_special_effect</span><span class="hljs-params">(<span class="hljs-type">atk_mc7725f_special_effect_t</span> effect)</span>;                        <span class="hljs-comment">/* 设置ATK-MC7725F模块特殊效果 */</span><br></code></pre></td></tr></table></figure>
+
+<p>关于这些我所知不多，详细的可以自己去工程文件看，但总的来说就是根据datasheet里的指令地址来写</p>
+<h2 id="三、将色块信息储存在FIFO中"><a href="#三、将色块信息储存在FIFO中" class="headerlink" title="三、将色块信息储存在FIFO中"></a>三、将色块信息储存在FIFO中</h2><h3 id="（1）FIFO"><a href="#（1）FIFO" class="headerlink" title="（1）FIFO"></a>（1）FIFO</h3><p><img src="/.top//../../../app1/Typora/ov7725.assets/image-20240925200927305.png" srcset="/img/loading.gif" lazyload alt="image-20240925200927305"></p>
+<blockquote>
+<p>⚫ VGA，即分辨率为 640x480 的输出格式</p>
+<p>⚫ QVGA，即分辨率为 320*240 的输出格式</p>
+<p>⚫ QQVGA，即分辨率为 160*120 的输出格式</p>
+</blockquote>
+<img src="/.top//../../../app1/Typora/ov7725.assets/image-20240927185026774.png" srcset="/img/loading.gif" lazyload alt="image-20240927185026774" style="zoom:50%;">
+
+<h4 id="①将数据写在FIFO"><a href="#①将数据写在FIFO" class="headerlink" title="①将数据写在FIFO"></a>①将数据写在FIFO</h4><p>采用的中断函数</p>
+<h2 id="四、LCD读取"><a href="#四、LCD读取" class="headerlink" title="四、LCD读取"></a>四、LCD读取</h2><p>LCD读取分为两步</p>
+<ul>
+<li>从FIFO中得到数据</li>
+<li>将得到的数据写入LCD中</li>
+</ul>
+<h3 id="（1）从FIFO中得到数据"><a href="#（1）从FIFO中得到数据" class="headerlink" title="（1）从FIFO中得到数据"></a>（1）从FIFO中得到数据</h3><p>即读FIFO</p>
+<p>读FIFO的时序图如下</p>
+<img src="/.top//../../../app1/Typora/ov7725.assets/image-20240927190106926.png" srcset="/img/loading.gif" lazyload alt="image-20240927190106926" style="zoom: 33%;">
+
+<p>总结为</p>
+<img src="/.top//../../../app1/Typora/ov7725.assets/image-20240927190218364.png" srcset="/img/loading.gif" lazyload alt="image-20240927190218364" style="zoom:33%;">
+
+<p>将其编程实现为</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c">ATK_MC7725F_RCLK(<span class="hljs-number">0</span>);<br>dat = (atk_mc7725f_get_byte_data() &lt;&lt; <span class="hljs-number">8</span>);<br>ATK_MC7725F_RCLK(<span class="hljs-number">1</span>);<br>ATK_MC7725F_RCLK(<span class="hljs-number">0</span>);<br>dat |= atk_mc7725f_get_byte_data();<br>ATK_MC7725F_RCLK(<span class="hljs-number">1</span>);<br>*dts = dat;<br></code></pre></td></tr></table></figure>
+
+<p>atk_mc7725f_get_byte_data()的定义如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-keyword">inline</span> <span class="hljs-type">uint8_t</span> <span class="hljs-title function_">atk_mc7725f_get_byte_data</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">uint8_t</span> dat = <span class="hljs-number">0</span>;<br>    <br><span class="hljs-meta">#<span class="hljs-keyword">if</span> (ATK_MC7725F_DATA_PIN_IN_SAME_GPIO_PORT == 0)</span><br>    dat |= (((ATK_MC7725F_D0_GPIO_PORT-&gt;IDR &amp; ATK_MC7725F_D0_GPIO_PIN) == <span class="hljs-number">0</span>) ? (<span class="hljs-number">0</span>) : (<span class="hljs-number">1</span>)) &lt;&lt; <span class="hljs-number">0</span>;<br>    dat |= (((ATK_MC7725F_D1_GPIO_PORT-&gt;IDR &amp; ATK_MC7725F_D1_GPIO_PIN) == <span class="hljs-number">0</span>) ? (<span class="hljs-number">0</span>) : (<span class="hljs-number">1</span>)) &lt;&lt; <span class="hljs-number">1</span>;<br>    dat |= (((ATK_MC7725F_D2_GPIO_PORT-&gt;IDR &amp; ATK_MC7725F_D2_GPIO_PIN) == <span class="hljs-number">0</span>) ? (<span class="hljs-number">0</span>) : (<span class="hljs-number">1</span>)) &lt;&lt; <span class="hljs-number">2</span>;<br>    dat |= (((ATK_MC7725F_D3_GPIO_PORT-&gt;IDR &amp; ATK_MC7725F_D3_GPIO_PIN) == <span class="hljs-number">0</span>) ? (<span class="hljs-number">0</span>) : (<span class="hljs-number">1</span>)) &lt;&lt; <span class="hljs-number">3</span>;<br>    dat |= (((ATK_MC7725F_D4_GPIO_PORT-&gt;IDR &amp; ATK_MC7725F_D4_GPIO_PIN) == <span class="hljs-number">0</span>) ? (<span class="hljs-number">0</span>) : (<span class="hljs-number">1</span>)) &lt;&lt; <span class="hljs-number">4</span>;<br>    dat |= (((ATK_MC7725F_D5_GPIO_PORT-&gt;IDR &amp; ATK_MC7725F_D5_GPIO_PIN) == <span class="hljs-number">0</span>) ? (<span class="hljs-number">0</span>) : (<span class="hljs-number">1</span>)) &lt;&lt; <span class="hljs-number">5</span>;<br>    dat |= (((ATK_MC7725F_D6_GPIO_PORT-&gt;IDR &amp; ATK_MC7725F_D6_GPIO_PIN) == <span class="hljs-number">0</span>) ? (<span class="hljs-number">0</span>) : (<span class="hljs-number">1</span>)) &lt;&lt; <span class="hljs-number">6</span>;<br>    dat |= (((ATK_MC7725F_D7_GPIO_PORT-&gt;IDR &amp; ATK_MC7725F_D7_GPIO_PIN) == <span class="hljs-number">0</span>) ? (<span class="hljs-number">0</span>) : (<span class="hljs-number">1</span>)) &lt;&lt; <span class="hljs-number">7</span>;<br><span class="hljs-meta">#<span class="hljs-keyword">else</span></span><br>    dat = ATK_MC7725F_DATE_GPIO_PORT-&gt;IDR &amp; ATK_MC7725F_DATA_READ_MASK;<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br>    <br>    <span class="hljs-keyword">return</span> dat;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>其中if (ATK_MC7725F_DATA_PIN_IN_SAME_GPIO_PORT &#x3D;&#x3D; 0)是指读取数据的GPIO口不是一个，比如GPIO口为GPIOA1,GPIOB1,而GPIO口都为一个时，读取数据为dat &#x3D; ATK_MC7725F_DATE_GPIO_PORT-&gt;IDR &amp; ATK_MC7725F_DATA_READ_MASK;</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">if</span> (ATK_MC7725F_DATA_PIN_IN_SAME_GPIO_PORT != 0)</span><br><span class="hljs-comment">/* 连接ATK-MC7725F模块D0~D7的GPIO端口 */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> ATK_MC7725F_DATE_GPIO_PORT  GPIOC</span><br><span class="hljs-comment">/* 一次性读取连接至ATK-MC7725F的D0~D7的GPIO引脚数据的掩码 */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> ATK_MC7725F_DATA_READ_MASK  0x00FF</span><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
+
+<p>掩码的作用：只读GPIOC的低八位，可以用python验证一下</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python">c = <span class="hljs-number">0b1111011100110011</span><br><span class="hljs-built_in">print</span>(<span class="hljs-built_in">bin</span>(c))<br>v = c &amp; <span class="hljs-number">0x00ff</span><br><span class="hljs-built_in">print</span>(<span class="hljs-built_in">bin</span>(v))<br></code></pre></td></tr></table></figure>
+
+<p>总</p>
+<p>顺便，在读取FIFO数据时，就顺手将数据写入LCD（*dts）了</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">uint8_t</span> <span class="hljs-title function_">atk_mc7725f_get_frame</span><span class="hljs-params">(<span class="hljs-keyword">volatile</span> <span class="hljs-type">uint16_t</span> *dts, <span class="hljs-type">atk_mc7725f_get_frame_type_t</span> type)</span><br>&#123;<br>    <span class="hljs-type">uint16_t</span> width_index;<br>    <span class="hljs-type">uint16_t</span> height_index;<br>    <span class="hljs-type">uint16_t</span> dat;<br>    <br>    <span class="hljs-keyword">if</span> (g_atk_mc7725f_sta.frame.handle_flag == FRAME_HANDLE_DONE)<br>    &#123;<br>        <span class="hljs-keyword">return</span> ATK_MC7725F_EEMPTY;<br>    &#125;<br>    <br>    ATK_MC7725F_RRST(<span class="hljs-number">0</span>);<br>    ATK_MC7725F_RCLK(<span class="hljs-number">0</span>);<br>    ATK_MC7725F_RCLK(<span class="hljs-number">1</span>);<br>    ATK_MC7725F_RCLK(<span class="hljs-number">0</span>);<br>    ATK_MC7725F_RRST(<span class="hljs-number">1</span>);<br>    ATK_MC7725F_RCLK(<span class="hljs-number">1</span>);<br>    <span class="hljs-keyword">for</span> (height_index=<span class="hljs-number">0</span>; height_index&lt;g_atk_mc7725f_sta.output.height; height_index++)<br>    &#123;<br>        <span class="hljs-keyword">for</span> (width_index=<span class="hljs-number">0</span>; width_index&lt;g_atk_mc7725f_sta.output.width; width_index++)<br>        &#123;<br>            ATK_MC7725F_RCLK(<span class="hljs-number">0</span>);<br>            dat = (atk_mc7725f_get_byte_data() &lt;&lt; <span class="hljs-number">8</span>);<br>            ATK_MC7725F_RCLK(<span class="hljs-number">1</span>);<br>            ATK_MC7725F_RCLK(<span class="hljs-number">0</span>);<br>            dat |= atk_mc7725f_get_byte_data();<br>            ATK_MC7725F_RCLK(<span class="hljs-number">1</span>);<br>            *dts = dat;<br>            <span class="hljs-keyword">switch</span> (type)<br>            &#123;<br>                <span class="hljs-keyword">case</span> ATK_MC7725F_GET_FRAME_TYPE_NOINC:<br>                &#123;<br>                    <span class="hljs-keyword">break</span>;<br>                &#125;<br>                <span class="hljs-keyword">case</span> ATK_MC7725F_GET_FRAME_TYPE_AUTO_INC:<br>                &#123;<br>                    dts++;<br>                    <span class="hljs-keyword">break</span>;<br>                &#125;<br>                <span class="hljs-keyword">default</span>:<br>                &#123;<br>                    <span class="hljs-keyword">return</span> ATK_MC7725F_EINVAL;<br>                &#125;<br>            &#125;<br>        &#125;<br>    &#125;<br>    <br>    g_atk_mc7725f_sta.frame.handle_flag = FRAME_HANDLE_DONE;<br>    g_atk_mc7725f_sta.frame.count++;<br>    <br>    <span class="hljs-keyword">return</span> ATK_MC7725F_EOK;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>将数据写入LCD，&amp;(LCD-&gt;LCD_RAM)</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">atk_mc7725f_get_frame(&amp;(LCD-&gt;LCD_RAM), ATK_MC7725F_GET_FRAME_TYPE_NOINC);<br></code></pre></td></tr></table></figure>
+
+
+
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/MCU/" class="category-chain-item">MCU</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/MCU/STM32/" class="category-chain-item">STM32</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/MCU/STM32/base/" class="category-chain-item">base</a>
+  
+  
+
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>STM32入门：ov7725与LCD连接</div>
+      <div>http://three27seven.top/2024/09/29/STM32入门：ov7725与LCD连接/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>three27seven</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年9月29日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/06/07/stm32%E5%85%A5%E9%97%A805-%E7%8B%AC%E7%AB%8B%E7%9C%8B%E9%97%A8%E7%8B%97/" title="stm32入门05-独立看门狗">
+                        <span class="hidden-mobile">stm32入门05-独立看门狗</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+  <div id="valine"></div>
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#valine', function() {
+      Fluid.utils.createScript('https://lib.baomitu.com/valine/1.5.1/Valine.min.js', function() {
+        var options = Object.assign(
+          {"appId":"ZYhHOpolBbpgNp7H1rQBR7vX-gzGzoHsz","appKey":"2wY8uFGJJVNXtFuViJUJZ5NJ","path":"window.location.pathname","placeholder":null,"avatar":"retro","meta":["nick","mail","link"],"requiredFields":[],"pageSize":10,"lang":"zh-CN","highlight":false,"recordIP":false,"serverURLs":"","emojiCDN":null,"emojiMaps":null,"enableQQ":false},
+          {
+            el: "#valine",
+            path: window.location.pathname
+          }
+        )
+        new Valine(options);
+        Fluid.utils.waitElementVisible('#valine .vcontent', () => {
+          var imgSelector = '#valine .vcontent img:not(.vemoji)';
+          Fluid.plugins.imageCaption(imgSelector);
+          Fluid.plugins.fancyBox(imgSelector);
+        })
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/leancloud.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
